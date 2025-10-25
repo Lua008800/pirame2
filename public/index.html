@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Itambe - Plataforma de Afiliação</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-active-desktop, .sidebar-tab-active {
+            border-bottom-color: #3b82f6; /* blue-500 */
+            color: #3b82f6;
+        }
+        .tab-active-mobile {
+            color: #3b82f6; /* blue-500 */
+        }
+        /* Custom scrollbar for better aesthetics in dark mode */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937; /* gray-800 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563; /* gray-600 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; /* gray-500 */
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .product-card button:disabled {
+            background-color: #4b5563;
+            cursor: not-allowed;
+        }
+        /* Estilo para a imagem placeholder no app principal */
+        .product-image-placeholder {
+            width: 100%;
+            height: 8rem; /* 128px */
+            background-color: #374151; /* gray-700 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem; /* 12px */
+            color: #9CA3AF; /* gray-400 */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white pb-20 sm:pb-0">
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="fixed inset-0 bg-gray-900/80 flex items-center justify-center z-50">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="fixed inset-0 bg-gray-900 flex items-center justify-center p-4 transition-opacity duration-500 z-20 hidden">
+        <div class="w-full max-w-sm bg-gray-800 p-8 rounded-lg shadow-2xl">
+            <!-- Login Form -->
+            <div id="login-form-container">
+                <h2 class="text-3xl font-bold text-center text-blue-400 mb-8">Itambe Login</h2>
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="login-email" class="block text-sm font-medium text-gray-400 mb-1">E-mail</label>
+                        <input type="email" id="login-email" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="seuemail@exemplo.com" required>
+                    </div>
+                    <div>
+                        <label for="login-password" class="block text-sm font-medium text-gray-400 mb-1">Senha</label>
+                        <input type="password" id="login-password" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="********" required>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition-colors">Entrar</button>
+                </form>
+                <p class="text-center mt-4 text-sm text-gray-400">
+                    Não tem uma conta? <button id="show-register-form" class="font-semibold text-blue-400 hover:underline">Crie aqui</button>
+                </p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form-container" class="hidden">
+                <h2 class="text-3xl font-bold text-center text-blue-400 mb-8">Criar Conta</h2>
+                <form id="register-form" class="space-y-4">
+                    <div>
+                        <label for="register-username" class="block text-sm font-medium text-gray-400 mb-1">Nome de Utilizador</label>
+                        <input type="text" id="register-username" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                     <div>
+                        <label for="register-email" class="block text-sm font-medium text-gray-400 mb-1">E-mail</label>
+                        <input type="email" id="register-email" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label for="register-phone" class="block text-sm font-medium text-gray-400 mb-1">Nº de Telefone</label>
+                        <input type="tel" id="register-phone" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="(XX)X XXXX-XXXX" required maxlength="15">
+                    </div>
+                    <div>
+                        <label for="register-password" class="block text-sm font-medium text-gray-400 mb-1">Senha</label>
+                        <input type="password" id="register-password" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                     <div>
+                        <label for="register-confirm-password" class="block text-sm font-medium text-gray-400 mb-1">Confirmar Senha</label>
+                        <input type="password" id="register-confirm-password" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <ul id="password-requirements" class="text-xs text-gray-400 space-y-1 list-disc list-inside">
+                        <li>Mínimo de 8 caracteres</li>
+                        <li>Pelo menos uma letra maiúscula</li>
+                        <li>Pelo menos um número</li>
+                        <li>Pelo menos um carácter especial</li>
+                    </ul>
+                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-md hover:bg-green-700 transition-colors mt-4">Registar</button>
+                </form>
+                <p class="text-center mt-4 text-sm text-gray-400">
+                    Já tem uma conta? <button id="show-login-form" class="font-semibold text-blue-400 hover:underline">Entre aqui</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container (initially hidden, content will be populated by JS) -->
+    <div id="app-container" class="container mx-auto max-w-7xl hidden">
+         <header class="sticky top-0 bg-gray-900 py-4 z-10 flex justify-between items-center mb-8 border-b border-gray-700 px-4 sm:px-0">
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-400">Itambe</h1>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-xs sm:text-sm text-gray-400">Saldo</p>
+                    <p id="balance" class="text-xl sm:text-2xl font-semibold text-green-400">R$ 0,00</p>
+                </div>
+                <button id="profile-toggle-button" class="p-2 rounded-full hover:bg-gray-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </button>
+            </div>
+        </header>
+        <nav class="hidden sm:block mb-8">
+            <div class="border-b border-gray-700">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-400">
+                    <li class="mr-2"><button class="tab-button inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-300 hover:border-gray-300" data-tab="products">Produtos para Afiliar</button></li>
+                    <li class="mr-2"><button class="tab-button inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-300 hover:border-gray-300" data-tab="my-products">Os Meus Produtos</button></li>
+                    <li class="mr-2"><button class="tab-button inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-300 hover:border-gray-300" data-tab="affiliate">O Meu Link e Lucros</button></li>
+                </ul>
+            </div>
+        </nav>
+        <h2 id="mobile-page-title" class="text-2xl font-semibold mb-6 sm:hidden px-4 sm:px-0"></h2>
+        <main class="px-4 sm:px-0">
+            <div id="products" class="tab-content"><h2 class="text-2xl font-semibold mb-6 hidden sm:block">Escolha um produto para se afiliar</h2><div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div></div>
+            <div id="my-products" class="tab-content hidden"><h2 class="text-2xl font-semibold mb-6 hidden sm:block">Os seus produtos afiliados</h2><div class="bg-gray-800 p-6 rounded-lg shadow-lg"><ul id="my-product-list" class="space-y-4"></ul><p id="no-products-message" class="text-center text-gray-500">Ainda não se afiliou a nenhum produto.</p></div></div>
+            <div id="affiliate" class="tab-content hidden"><h2 class="text-2xl font-semibold mb-6 hidden sm:block">O seu Link de Convite e Ganhos</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="bg-gray-800 p-6 rounded-lg shadow-lg"><h3 class="text-xl font-semibold mb-4">O seu Link Exclusivo</h3><p class="text-gray-400 mb-4">Partilhe este link para convidar novos utilizadores e ganhar comissões.</p><div class="flex bg-gray-700 rounded-md p-2"><input id="referral-link" type="text" class="bg-transparent w-full text-gray-300 focus:outline-none" value="" readonly><button id="copy-button" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">Copiar</button></div></div><div class="bg-gray-800 p-6 rounded-lg shadow-lg"><h3 class="text-xl font-semibold mb-4">Resumo de Ganhos</h3><div class="space-y-3"><div class="flex justify-between"><span class="text-gray-400">Convidados (Nível 1 - 20%)</span><span id="earnings-level-1" class="font-semibold text-green-400">+ R$ 0,00</span></div><div class="flex justify-between"><span class="text-gray-400">Convidados (Nível 2 - 5%)</span><span id="earnings-level-2" class="font-semibold text-green-400">+ R$ 0,00</span></div><hr class="border-gray-700"><div class="flex justify-between text-lg"><span class="font-bold">Total de Ganhos</span><span id="earnings-total" class="font-bold text-green-300">R$ 0,00</span></div></div></div></div></div>
+        </main>
+        <nav class="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-2 sm:hidden"><ul class="flex justify-around text-sm font-medium text-center text-gray-400"><li><button class="tab-button inline-block p-2" data-tab="products">Produtos para Afiliar</button></li><li><button class="tab-button inline-block p-2" data-tab="my-products">Os Meus Produtos</button></li><li><button class="tab-button inline-block p-2" data-tab="affiliate">O Meu Link e Lucros</button></li></ul></nav>
+        <div id="profile-sidebar-backdrop" class="fixed inset-0 bg-black/60 z-30 hidden"></div>
+        <div id="profile-sidebar" class="fixed top-0 right-0 h-full w-full max-w-md bg-gray-800 shadow-2xl z-40 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b border-gray-700 sticky top-0 bg-gray-800"><h2 class="text-2xl font-semibold">Conta</h2><button id="sidebar-close-button" class="p-2 rounded-full hover:bg-gray-700 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+            <nav class="border-b border-gray-700"><ul class="flex justify-around text-sm font-medium text-center text-gray-400"><li class="w-full"><button class="sidebar-tab-button p-4 w-full border-b-2 border-transparent" data-sidetab="profile-content">Perfil</button></li><li class="w-full"><button class="sidebar-tab-button p-4 w-full border-b-2 border-transparent" data-sidetab="finance-content">Finanças</button></li></ul></nav>
+            <div class="p-6 space-y-8 overflow-y-auto flex-grow">
+                <div id="profile-content" class="sidebar-tab-content"><form id="profile-form" class="space-y-6 bg-gray-900/50 p-6 rounded-lg"><h3 class="text-xl font-semibold">Dados Pessoais</h3><div><label for="profile-name" class="block text-sm font-medium text-gray-400 mb-1">Nome de Utilizador</label><input type="text" id="profile-name" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="O seu nome completo"></div><div><label class="block text-sm font-medium text-gray-400 mb-1">Número de Telefone</label><p id="profile-phone" class="w-full bg-gray-700 rounded-md p-3 text-gray-400"></p></div><button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition-colors">Guardar Alterações</button></form><div id="pix-section" class="mt-8 bg-gray-900/50 p-6 rounded-lg"><h3 class="text-xl font-semibold mb-4">Dados PIX (Apenas um registo)</h3><div id="pix-setup-container"><form id="pix-form" class="space-y-4"><div><label for="pix-full-name" class="block text-sm font-medium text-gray-400 mb-1">Nome Completo (para PIX)</label><input type="text" id="pix-full-name" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required></div><div><label for="pix-key" class="block text-sm font-medium text-gray-400 mb-1">A sua Chave PIX</label><input type="text" id="pix-key" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="CPF, e-mail, telefone, etc." required></div><button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition-colors">Guardar Chave PIX</button></form></div><div id="pix-display-container" class="hidden space-y-4"><div><label class="block text-sm font-medium text-gray-400 mb-1">Nome Completo</label><p id="pix-display-name" class="w-full bg-gray-700 rounded-md p-3 text-gray-300"></p></div><div><label class="block text-sm font-medium text-gray-400 mb-1">Chave PIX</label><p id="pix-display-key" class="w-full bg-gray-700 rounded-md p-3 text-gray-300"></p></div><p class="text-xs text-gray-500">Os dados PIX não podem ser alterados por motivos de segurança.</p></div></div></div>
+                <div id="finance-content" class="sidebar-tab-content hidden"><div class="space-y-8"><div class="bg-gray-900/50 p-6 rounded-lg"><h4 class="text-lg font-semibold mb-4">Realizar Depósito</h4><div id="promotion-banner" class="bg-blue-900/50 border border-blue-700 text-blue-300 text-sm p-3 rounded-md mb-4 hidden"><strong>Primeiro Depósito:</strong> Deposite R$ 200,00+ e ganhe <strong>50% de bónus!</strong></div><form id="deposit-form" class="space-y-4"><div><label for="deposit-amount" class="block text-sm font-medium text-gray-400 mb-1">Valor (Mín. R$ 40 / Máx. R$ 5.000)</label><input type="number" id="deposit-amount" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: 200"></div><button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-md hover:bg-green-700 transition-colors">Gerar QR Code PIX</button></form></div><div class="bg-gray-900/50 p-6 rounded-lg"><h4 class="text-lg font-semibold mb-4">Solicitar Levantamento</h4><div class="bg-yellow-900/50 border border-yellow-700 text-yellow-300 text-sm p-3 rounded-md mb-4"><strong>Atenção:</strong> Seg-Sex, das 10:00 às 16:00.</div><div id="register-pix-prompt" class="hidden text-center bg-gray-700 p-4 rounded-md"><p class="text-gray-400">Registe uma chave PIX na secção "Perfil" para poder levantar.</p></div><form id="withdraw-form" class="space-y-4 hidden"><div><label for="withdraw-amount" class="block text-sm font-medium text-gray-400 mb-1">Valor (Mín. R$ 30 / Máx. R$ 5.000)</label><input type="number" id="withdraw-amount" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: 150"></div><div><label class="block text-sm font-medium text-gray-400 mb-1">Levantar para a Chave PIX</label><p id="saved-pix-key" class="w-full bg-gray-900 rounded-md p-2 text-gray-300 font-mono"></p></div><button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-md hover:bg-blue-700 transition-colors">Solicitar Levantamento</button></form></div></div></div>
+            </div>
+            <div class="p-6 mt-auto"><button id="logout-button" class="w-full bg-red-600/80 text-white font-bold py-3 rounded-md hover:bg-red-600 transition-colors">Sair da Conta</button></div>
+        </div>
+    </div>
+    
+    <!-- Notification/Modal -->
+    <div id="notification" class="fixed top-5 right-5 z-50 bg-green-500 text-white py-2 px-5 rounded-lg shadow-lg transition-transform transform translate-x-full duration-300">
+        <p>Notificação de teste.</p>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, increment, collection, getDocs, addDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const authScreen = document.getElementById('auth-screen');
+        const appContainer = document.getElementById('app-container');
+        const notification = document.getElementById('notification');
+
+        const showNotification = (message, type = 'success') => {
+            notification.textContent = message;
+            notification.classList.remove('bg-green-500', 'bg-red-500');
+            notification.classList.add(type === 'success' ? 'bg-green-500' : 'bg-red-500');
+            notification.classList.remove('translate-x-full');
+            setTimeout(() => { notification.classList.add('translate-x-full'); }, 3000);
+        };
+        
+        let auth = null;
+        let db = null;
+        let isAppInitialized = false; // Flag to check if app logic is initialized
+
+        try {
+            // **NOVA CONFIGURAÇÃO DO FIREBASE (PROJETO itambe1)**
+            const firebaseConfig = {
+                apiKey: "AIzaSyAAcSljFY_EZnNZyeDlRD_A5Ac6xMdlfYI",
+                authDomain: "itambe1.firebaseapp.com",
+                projectId: "itambe1",
+                storageBucket: "itambe1.appspot.com", // Formato correto
+                messagingSenderId: "994625835321",
+                appId: "1:994625835321:web:a778e249b04671e83c98e8",
+                measurementId: "G-JP3BRJYES3"
+            };
+
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+        } catch (error) {
+            console.error("Erro crítico na inicialização do Firebase:", error);
+            loadingSpinner.classList.add('hidden');
+            authScreen.classList.remove('hidden');
+            showNotification('Erro de inicialização. Verifique a configuração do Firebase.', 'error');
+        }
+
+        if (auth) {
+            const loginFormContainer = document.getElementById('login-form-container');
+            const registerFormContainer = document.getElementById('register-form-container');
+            const showRegisterBtn = document.getElementById('show-register-form');
+            const showLoginBtn = document.getElementById('show-login-form');
+            
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const registerPhoneInput = document.getElementById('register-phone');
+
+            showRegisterBtn.addEventListener('click', () => {
+                loginFormContainer.classList.add('hidden');
+                registerFormContainer.classList.remove('hidden');
+            });
+
+            showLoginBtn.addEventListener('click', () => {
+                registerFormContainer.classList.add('hidden');
+                loginFormContainer.classList.remove('hidden');
+            });
+
+            registerPhoneInput.addEventListener('input', (event) => {
+                const input = event.target;
+                let value = input.value.replace(/\D/g, ''); 
+                let formattedValue = '';
+                if (value.length > 0) { formattedValue = '(' + value.substring(0, 2); } 
+                if (value.length > 2) { formattedValue = '(' + value.substring(0, 2) + ')' + value.substring(2, 3); }
+                if (value.length > 3) { formattedValue += ' ' + value.substring(3, 7); }
+                if (value.length > 7) { formattedValue += '-' + value.substring(7, 11); }
+                input.value = formattedValue;
+            });
+
+            onAuthStateChanged(auth, (user) => {
+                loadingSpinner.classList.add('hidden');
+                if (user) {
+                    authScreen.classList.add('hidden');
+                    appContainer.classList.remove('hidden');
+                    // Only initialize app logic once
+                    if (!isAppInitialized) { 
+                        initializeAppLogic(user, db);
+                        isAppInitialized = true;
+                    }
+                } else {
+                    authScreen.classList.remove('hidden');
+                    appContainer.classList.add('hidden');
+                    appContainer.innerHTML = ''; // Limpa o conteúdo da app ao fazer logout
+                    isAppInitialized = false; // Reset flag on logout
+                }
+            });
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                signInWithEmailAndPassword(auth, email, password)
+                    .catch(error => showNotification('E-mail ou senha inválidos.', 'error'));
+            });
+
+            registerForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('register-username').value;
+                const email = document.getElementById('register-email').value;
+                const phone = registerPhoneInput.value;
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('register-confirm-password').value;
+                
+                if (password !== confirmPassword) {
+                    return showNotification('As senhas não coincidem.', 'error');
+                }
+
+                const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+                if (!passwordRegex.test(password)) {
+                    showNotification('A senha não cumpre os requisitos de segurança.', 'error');
+                    return;
+                }
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const refId = urlParams.get('ref');
+
+                createUserWithEmailAndPassword(auth, email, password)
+                    .then(cred => {
+                        const userData = {
+                            name: username,
+                            email: email,
+                            phone: phone, 
+                            balance: 0, 
+                            pixKey: "",
+                            pixFullName: "",
+                            pixInfoSet: false,
+                            earningsLevel1: 0, 
+                            earningsLevel2: 0,
+                            referredBy: refId || null,
+                            hasDeposited: false
+                        };
+                        return setDoc(doc(db, "users", cred.user.uid), userData);
+                    })
+                    .catch(error => {
+                        if (error.code === 'auth/email-already-in-use') {
+                            showNotification('Este e-mail já está registado.', 'error');
+                        } else {
+                            showNotification('Erro ao registar. Tente novamente.', 'error');
+                        }
+                    });
+            });
+            
+            function initializeAppLogic(user, dbInstance) { 
+                let userDataUnsubscribe = null; 
+                let userAffiliatedProductsUnsubscribe = null;
+                let currentBalance = 0;
+                let userHasDeposited = true;
+                let userAffiliatedProductIds = new Set();
+                
+                const balanceEl = document.getElementById('balance');
+                const tabButtons = document.querySelectorAll('.tab-button');
+                const tabContents = document.querySelectorAll('.tab-content');
+                const mobilePageTitle = document.getElementById('mobile-page-title');
+                const copyButton = document.getElementById('copy-button');
+                const depositForm = document.getElementById('deposit-form');
+                const profileToggleButton = document.getElementById('profile-toggle-button');
+                const sidebarCloseButton = document.getElementById('sidebar-close-button');
+                const sidebarBackdrop = document.getElementById('profile-sidebar-backdrop');
+                const logoutButton = document.getElementById('logout-button');
+                const profileForm = document.getElementById('profile-form');
+                const profileNameInput = document.getElementById('profile-name');
+                const profilePhoneEl = document.getElementById('profile-phone');
+                const withdrawForm = document.getElementById('withdraw-form');
+                const registerPixPrompt = document.getElementById('register-pix-prompt');
+                const savedPixKeyEl = document.getElementById('saved-pix-key');
+                const referralLinkInput = document.getElementById('referral-link');
+                const earningsL1 = document.getElementById('earnings-level-1');
+                const earningsL2 = document.getElementById('earnings-level-2');
+                const earningsTotal = document.getElementById('earnings-total');
+                const productListContainer = document.getElementById('product-list');
+                const myProductListContainer = document.getElementById('my-product-list');
+                const noProductsMessage = document.getElementById('no-products-message');
+                const promotionBanner = document.getElementById('promotion-banner');
+                const sidebarTabButtons = document.querySelectorAll('.sidebar-tab-button');
+                const sidebarTabContents = document.querySelectorAll('.sidebar-tab-content');
+                const pixForm = document.getElementById('pix-form');
+                const pixSetupContainer = document.getElementById('pix-setup-container');
+                const pixDisplayContainer = document.getElementById('pix-display-container');
+                const pixDisplayName = document.getElementById('pix-display-name');
+                const pixDisplayKey = document.getElementById('pix-display-key');
+
+
+                const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const userDocRef = doc(dbInstance, "users", user.uid);
+
+                userDataUnsubscribe = onSnapshot(userDocRef, (doc) => {
+                    if (doc.exists()) {
+                        const userData = doc.data();
+                        currentBalance = userData.balance || 0;
+                        userHasDeposited = userData.hasDeposited || false;
+
+                        balanceEl.textContent = formatCurrency(currentBalance);
+                        profileNameInput.value = userData.name || userData.username || "";
+                        profilePhoneEl.textContent = userData.phone || "";
+                        
+                        referralLinkInput.value = `${window.location.origin}${window.location.pathname}?ref=${user.uid}`;
+                        earningsL1.textContent = formatCurrency(userData.earningsLevel1);
+                        earningsL2.textContent = formatCurrency(userData.earningsLevel2);
+                        earningsTotal.textContent = formatCurrency((userData.earningsLevel1 || 0) + (userData.earningsLevel2 || 0));
+
+                        // Lógica para a secção PIX
+                        if (userData.pixInfoSet) {
+                            pixSetupContainer.classList.add('hidden');
+                            pixDisplayContainer.classList.remove('hidden');
+                            pixDisplayName.textContent = userData.pixFullName;
+                            pixDisplayKey.textContent = userData.pixKey;
+                            withdrawForm.classList.remove('hidden');
+                            registerPixPrompt.classList.add('hidden');
+                            savedPixKeyEl.textContent = userData.pixKey;
+                        } else {
+                            pixSetupContainer.classList.remove('hidden');
+                            pixDisplayContainer.classList.add('hidden');
+                            withdrawForm.classList.add('hidden');
+                            registerPixPrompt.classList.remove('hidden');
+                        }
+                        
+                        promotionBanner.classList.toggle('hidden', userHasDeposited);
+                    } else {
+                        console.error("Documento do utilizador não encontrado!");
+                    }
+                }, (error) => {
+                     console.error("Erro ao obter dados do utilizador:", error);
+                     showNotification('Erro ao carregar dados do perfil.', 'error');
+                });
+                
+                async function loadAllProducts() {
+                    try {
+                        const productsRef = collection(dbInstance, "products");
+                        const q = query(productsRef, orderBy("price"));
+                        const querySnapshot = await getDocs(q);
+
+                        let html = '';
+                        querySnapshot.forEach((doc) => {
+                            const product = doc.data();
+                            html += `<div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col product-card"><div class="product-image-placeholder">${product.name}</div><div class="p-4 flex flex-col flex-grow"><h3 class="font-semibold text-lg mb-2">${product.name}</h3><div class="space-y-2 text-sm mt-auto"><div class="flex justify-between"><span class="text-gray-400">Preço:</span><span class="font-medium">${formatCurrency(product.price)}</span></div><div class="flex justify-between"><span class="text-gray-400">Ciclo:</span><span class="font-medium">${product.cycleDays} dias</span></div><div class="flex justify-between"><span class="text-gray-400">Retorno Total:</span><span class="font-medium text-green-400">${formatCurrency(product.totalReturn)}</span></div></div><button data-product-id="${doc.id}" data-product-price="${product.price}" class="affiliate-button mt-4 w-full bg-blue-600 text-white font-bold py-2 rounded-md hover:bg-blue-700 transition-colors">Afiliar-se</button></div></div>`;
+                        });
+                        productListContainer.innerHTML = html;
+                        updateAllProductsUI();
+                    } catch (error) {
+                        console.error("Erro ao carregar produtos:", error);
+                        showNotification('Erro ao carregar a lista de produtos.', 'error');
+                    }
+                }
+                
+                function updateAllProductsUI() {
+                    const allProductButtons = document.querySelectorAll('.affiliate-button');
+                    allProductButtons.forEach(button => {
+                        const productId = button.dataset.productId;
+                        if (userAffiliatedProductIds.has(productId)) {
+                            button.disabled = true;
+                            button.textContent = 'Já Afiliado';
+                        } else {
+                            button.disabled = false;
+                            button.textContent = 'Afiliar-se';
+                        }
+                    });
+                }
+
+                function loadMyProducts() {
+                    const q = query(collection(dbInstance, `users/${user.uid}/affiliatedProducts`));
+                    userAffiliatedProductsUnsubscribe = onSnapshot(q, (querySnapshot) => {
+                        userAffiliatedProductIds.clear();
+                        if(querySnapshot.empty) {
+                            myProductListContainer.innerHTML = '';
+                            noProductsMessage.classList.remove('hidden');
+                        } else {
+                            noProductsMessage.classList.add('hidden');
+                            let html = '';
+                            querySnapshot.forEach((doc) => {
+                                const product = doc.data();
+                                if (product.productId && product.affiliatedAt) { // Verifica se dados essenciais existem
+                                    userAffiliatedProductIds.add(product.productId);
+                                    const startDate = product.affiliatedAt.toDate();
+                                    const daysPassed = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+                                    html += `<li class="flex justify-between items-center bg-gray-700 p-4 rounded-md"><div><h3 class="font-semibold">${product.name || 'Produto sem nome'}</h3><p class="text-sm text-gray-400">Ciclo: ${daysPassed}/${product.cycleDays || 100} dias</p></div><div class="text-right"><p class="text-green-400 font-bold">+ ${formatCurrency(product.dailyReturn)}</p><p class="text-xs text-gray-500">Retorno diário</p></div></li>`;
+                                } else {
+                                     console.warn("Produto afiliado com dados incompletos encontrado:", doc.id, product);
+                                }
+                            });
+                            myProductListContainer.innerHTML = html;
+                        }
+                        updateAllProductsUI();
+                    }, (error) => {
+                        console.error("Erro ao carregar os meus produtos:", error);
+                        showNotification('Erro ao carregar os seus produtos.', 'error');
+                    });
+                }
+
+                const openSidebar = () => { document.getElementById('profile-sidebar-backdrop').classList.remove('hidden'); document.getElementById('profile-sidebar').classList.remove('translate-x-full'); };
+                const closeSidebar = () => { document.getElementById('profile-sidebar-backdrop').classList.add('hidden'); document.getElementById('profile-sidebar').classList.add('translate-x-full'); };
+                profileToggleButton.addEventListener('click', openSidebar);
+                sidebarCloseButton.addEventListener('click', closeSidebar);
+                sidebarBackdrop.addEventListener('click', closeSidebar);
+                logoutButton.addEventListener('click', () => {
+                    signOut(auth).then(() => {
+                        if (userDataUnsubscribe) userDataUnsubscribe();
+                        if (userAffiliatedProductsUnsubscribe) userAffiliatedProductsUnsubscribe();
+                    });
+                });
+
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const tab = button.dataset.tab;
+                        tabButtons.forEach(btn => {
+                            btn.classList.remove('tab-active-desktop');
+                            btn.classList.remove('tab-active-mobile');
+                        });
+                        document.querySelectorAll(`.tab-button[data-tab="${tab}"]`).forEach(b => {
+                            b.classList.add('tab-active-desktop');
+                            b.classList.add('tab-active-mobile');
+                        });
+                        tabContents.forEach(content => content.classList.toggle('hidden', content.id !== tab));
+                        mobilePageTitle.textContent = button.textContent;
+                    });
+                });
+                 const initialTabButton = document.querySelector('nav.sm\\:block .tab-button[data-tab="products"]');
+                 if(initialTabButton) initialTabButton.click();
+                
+                sidebarTabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const sidetab = button.dataset.sidetab;
+                        sidebarTabButtons.forEach(btn => btn.classList.remove('sidebar-tab-active'));
+                        button.classList.add('sidebar-tab-active');
+                        sidebarTabContents.forEach(content => {
+                            content.classList.toggle('hidden', content.id !== sidetab);
+                        });
+                    });
+                });
+                 const initialSidebarButton = document.querySelector('.sidebar-tab-button');
+                 if(initialSidebarButton) initialSidebarButton.click();
+
+                copyButton.addEventListener('click', () => {
+                    referralLinkInput.select();
+                    document.execCommand('copy');
+                    showNotification('Link copiado!');
+                });
+                
+                profileForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    updateDoc(userDocRef, { 
+                        name: profileNameInput.value.trim(), 
+                    }).then(() => showNotification('Nome de utilizador atualizado com sucesso!'));
+                });
+
+                pixForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const pixFullName = document.getElementById('pix-full-name').value.trim();
+                    const pixKey = document.getElementById('pix-key').value.trim();
+
+                    if (!pixFullName || !pixKey) {
+                        return showNotification('Por favor, preencha todos os campos PIX.', 'error');
+                    }
+
+                    updateDoc(userDocRef, {
+                        pixFullName: pixFullName,
+                        pixKey: pixKey,
+                        pixInfoSet: true
+                    }).then(() => {
+                        showNotification('Dados PIX guardados com sucesso!');
+                    }).catch(err => {
+                        showNotification('Erro ao guardar os dados PIX.', 'error');
+                    });
+                });
+
+                depositForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const amount = parseFloat(document.getElementById('deposit-amount').value);
+                    if (isNaN(amount) || amount < 40) return showNotification('Depósito mínimo: R$ 40,00.', 'error');
+                    if (amount > 5000) return showNotification('Depósito máximo: R$ 5.000,00.', 'error');
+                    
+                    let bonus = 0;
+                    if (!userHasDeposited && amount >= 200) {
+                        bonus = amount * 0.5;
+                    }
+                    const totalDeposit = amount + bonus;
+                    
+                    updateDoc(userDocRef, { 
+                        balance: increment(totalDeposit),
+                        hasDeposited: true
+                    }).then(() => {
+                        let msg = `Depósito de ${formatCurrency(amount)} processado!`;
+                        if (bonus > 0) msg += ` Bónus de ${formatCurrency(bonus)} adicionado!`;
+                        showNotification(msg);
+                        depositForm.reset();
+                    });
+                });
+                
+                const isWithdrawalTime = () => {
+                    const now = new Date();
+                    const day = now.getDay(); const hour = now.getHours();
+                    return day >= 1 && day <= 5 && hour >= 10 && hour < 16;
+                };
+
+                withdrawForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    if (!isWithdrawalTime()) return showNotification('Fora do horário de levantamento.', 'error');
+                    const amount = parseFloat(document.getElementById('withdraw-amount').value);
+                    if (isNaN(amount) || amount < 30) return showNotification('Levantamento mínimo: R$ 30,00.', 'error');
+                    if (amount > 5000) return showNotification('Levantamento máximo diário: R$ 5.000,00.', 'error');
+                    if (amount > currentBalance) return showNotification('Saldo insuficiente.', 'error');
+                    
+                    updateDoc(userDocRef, { balance: increment(-amount) })
+                        .then(() => showNotification(`Levantamento de ${formatCurrency(amount)} solicitado!`));
+                });
+
+                productListContainer.addEventListener('click', async (e) => {
+                    if (e.target.classList.contains('affiliate-button')) {
+                        const button = e.target;
+                        const productId = button.dataset.productId;
+                        const productPrice = parseFloat(button.dataset.productPrice);
+
+                        button.disabled = true;
+                        button.textContent = 'A processar...';
+
+                        if (userAffiliatedProductIds.has(productId)) {
+                            showNotification('Você já está afiliado a este produto.', 'error');
+                            button.textContent = 'Já Afiliado';
+                            return;
+                        }
+
+                        if (currentBalance < productPrice) {
+                            showNotification('Saldo insuficiente.', 'error');
+                            button.disabled = false;
+                            button.textContent = 'Afiliar-se';
+                            return;
+                        }
+                        
+                        try {
+                            const productRef = doc(dbInstance, "products", productId);
+                            const productSnap = await getDoc(productRef);
+
+                            if(!productSnap.exists()) throw new Error("Produto não encontrado");
+                            
+                            const productData = productSnap.data();
+
+                            await addDoc(collection(dbInstance, `users/${user.uid}/affiliatedProducts`), {
+                                productId: productId,
+                                name: productData.name,
+                                dailyReturn: productData.dailyReturn,
+                                cycleDays: productData.cycleDays,
+                                affiliatedAt: serverTimestamp()
+                            });
+                            
+                            await updateDoc(userDocRef, {
+                                balance: increment(-productPrice)
+                            });
+
+                            showNotification(`Afiliação com ${productData.name} bem-sucedida!`);
+                             const myProductsTab = document.querySelector('.tab-button[data-tab="my-products"]');
+                             if(myProductsTab) myProductsTab.click(); // Clica apenas se o botão existir
+
+                        } catch (error) {
+                            console.error("Erro ao afiliar-se: ", error);
+                            showNotification('Ocorreu um erro. Tente novamente.', 'error');
+                            button.disabled = false;
+                            button.textContent = 'Afiliar-se';
+                        }
+                    }
+                });
+
+                loadAllProducts();
+                loadMyProducts();
+            } // Fim de initializeAppLogic
+        } // Fim de if(auth)
+    </script>
+</body>
+</html>
+
