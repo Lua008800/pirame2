@@ -49,7 +49,7 @@
             background-color: #4b5563;
             cursor: not-allowed;
         }
-        /* Estilo para a imagem placeholder no app principal */
+        /* Estilo para a imagem placeholder no app principal (NÃO MAIS USADO) */
         .product-image-placeholder {
             width: 100%;
             height: 8rem; /* 128px */
@@ -64,15 +64,12 @@
 </head>
 <body class="bg-gray-900 text-white pb-20 sm:pb-0">
 
-    <!-- Loading Spinner -->
     <div id="loading-spinner" class="fixed inset-0 bg-gray-900/80 flex items-center justify-center z-50">
         <div class="loader"></div>
     </div>
 
-    <!-- Auth Screen -->
     <div id="auth-screen" class="fixed inset-0 bg-gray-900 flex items-center justify-center p-4 transition-opacity duration-500 z-20 hidden">
         <div class="w-full max-w-sm bg-gray-800 p-8 rounded-lg shadow-2xl">
-            <!-- Login Form -->
             <div id="login-form-container">
                 <h2 class="text-3xl font-bold text-center text-blue-400 mb-8">Itambe Login</h2>
                 <form id="login-form" class="space-y-6">
@@ -91,7 +88,6 @@
                 </p>
             </div>
 
-            <!-- Register Form -->
             <div id="register-form-container" class="hidden">
                 <h2 class="text-3xl font-bold text-center text-blue-400 mb-8">Criar Conta</h2>
                 <form id="register-form" class="space-y-4">
@@ -99,7 +95,7 @@
                         <label for="register-username" class="block text-sm font-medium text-gray-400 mb-1">Nome de Utilizador</label>
                         <input type="text" id="register-username" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     </div>
-                     <div>
+                    <div>
                         <label for="register-email" class="block text-sm font-medium text-gray-400 mb-1">E-mail</label>
                         <input type="email" id="register-email" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     </div>
@@ -111,7 +107,7 @@
                         <label for="register-password" class="block text-sm font-medium text-gray-400 mb-1">Senha</label>
                         <input type="password" id="register-password" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     </div>
-                     <div>
+                    <div>
                         <label for="register-confirm-password" class="block text-sm font-medium text-gray-400 mb-1">Confirmar Senha</label>
                         <input type="password" id="register-confirm-password" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     </div>
@@ -130,9 +126,8 @@
         </div>
     </div>
 
-    <!-- Main Container (initially hidden, content will be populated by JS) -->
     <div id="app-container" class="container mx-auto max-w-7xl hidden">
-         <header class="sticky top-0 bg-gray-900 py-4 z-10 flex justify-between items-center mb-8 border-b border-gray-700 px-4 sm:px-0">
+        <header class="sticky top-0 bg-gray-900 py-4 z-10 flex justify-between items-center mb-8 border-b border-gray-700 px-4 sm:px-0">
             <h1 class="text-3xl sm:text-4xl font-bold text-blue-400">Itambe</h1>
             <div class="flex items-center gap-4">
                 <div class="text-right">
@@ -172,16 +167,14 @@
         </div>
     </div>
     
-    <!-- Notification/Modal -->
     <div id="notification" class="fixed top-5 right-5 z-50 bg-green-500 text-white py-2 px-5 rounded-lg shadow-lg transition-transform transform translate-x-full duration-300">
         <p>Notificação de teste.</p>
     </div>
 
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, increment, collection, getDocs, addDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, increment, collection, getDocs, addDoc, serverTimestamp, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
         
         const loadingSpinner = document.getElementById('loading-spinner');
         const authScreen = document.getElementById('auth-screen');
@@ -267,7 +260,7 @@
                 } else {
                     authScreen.classList.remove('hidden');
                     appContainer.classList.add('hidden');
-                    appContainer.innerHTML = ''; // Limpa o conteúdo da app ao fazer logout
+                    // appContainer.innerHTML = ''; // Limpa o conteúdo da app ao fazer logout
                     isAppInitialized = false; // Reset flag on logout
                 }
             });
@@ -406,10 +399,13 @@
                         console.error("Documento do utilizador não encontrado!");
                     }
                 }, (error) => {
-                     console.error("Erro ao obter dados do utilizador:", error);
-                     showNotification('Erro ao carregar dados do perfil.', 'error');
+                        console.error("Erro ao obter dados do utilizador:", error);
+                        showNotification('Erro ao carregar dados do perfil.', 'error');
                 });
                 
+                // ==================================================================
+                // FUNÇÃO MODIFICADA PARA MOSTRAR IMAGEM
+                // ==================================================================
                 async function loadAllProducts() {
                     try {
                         const productsRef = collection(dbInstance, "products");
@@ -419,7 +415,25 @@
                         let html = '';
                         querySnapshot.forEach((doc) => {
                             const product = doc.data();
-                            html += `<div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col product-card"><div class="product-image-placeholder">${product.name}</div><div class="p-4 flex flex-col flex-grow"><h3 class="font-semibold text-lg mb-2">${product.name}</h3><div class="space-y-2 text-sm mt-auto"><div class="flex justify-between"><span class="text-gray-400">Preço:</span><span class="font-medium">${formatCurrency(product.price)}</span></div><div class="flex justify-between"><span class="text-gray-400">Ciclo:</span><span class="font-medium">${product.cycleDays} dias</span></div><div class="flex justify-between"><span class="text-gray-400">Retorno Total:</span><span class="font-medium text-green-400">${formatCurrency(product.totalReturn)}</span></div></div><button data-product-id="${doc.id}" data-product-price="${product.price}" class="affiliate-button mt-4 w-full bg-blue-600 text-white font-bold py-2 rounded-md hover:bg-blue-700 transition-colors">Afiliar-se</button></div></div>`;
+                            
+                            // Define uma imagem placeholder caso 'imageUrl' não exista no produto
+                            const imageUrl = product.imageUrl || 'https://via.placeholder.com/300x150.png?text=Sem+Imagem';
+
+                            html += `
+                            <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col product-card">
+                                
+                                <img src="${imageUrl}" alt="${product.name}" class="w-full h-32 object-cover">
+                                
+                                <div class="p-4 flex flex-col flex-grow">
+                                    <h3 class="font-semibold text-lg mb-2">${product.name}</h3>
+                                    <div class="space-y-2 text-sm mt-auto">
+                                        <div class="flex justify-between"><span class="text-gray-400">Preço:</span><span class="font-medium">${formatCurrency(product.price)}</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Ciclo:</span><span class="font-medium">${product.cycleDays} dias</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400">Retorno Total:</span><span class="font-medium text-green-400">${formatCurrency(product.totalReturn)}</span></div>
+                                    </div>
+                                    <button data-product-id="${doc.id}" data-product-price="${product.price}" class="affiliate-button mt-4 w-full bg-blue-600 text-white font-bold py-2 rounded-md hover:bg-blue-700 transition-colors">Afiliar-se</button>
+                                </div>
+                            </div>`;
                         });
                         productListContainer.innerHTML = html;
                         updateAllProductsUI();
@@ -428,6 +442,9 @@
                         showNotification('Erro ao carregar a lista de produtos.', 'error');
                     }
                 }
+                // ==================================================================
+                // FIM DA FUNÇÃO MODIFICADA
+                // ==================================================================
                 
                 function updateAllProductsUI() {
                     const allProductButtons = document.querySelectorAll('.affiliate-button');
@@ -461,7 +478,7 @@
                                     const daysPassed = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
                                     html += `<li class="flex justify-between items-center bg-gray-700 p-4 rounded-md"><div><h3 class="font-semibold">${product.name || 'Produto sem nome'}</h3><p class="text-sm text-gray-400">Ciclo: ${daysPassed}/${product.cycleDays || 100} dias</p></div><div class="text-right"><p class="text-green-400 font-bold">+ ${formatCurrency(product.dailyReturn)}</p><p class="text-xs text-gray-500">Retorno diário</p></div></li>`;
                                 } else {
-                                     console.warn("Produto afiliado com dados incompletos encontrado:", doc.id, product);
+                                        console.warn("Produto afiliado com dados incompletos encontrado:", doc.id, product);
                                 }
                             });
                             myProductListContainer.innerHTML = html;
@@ -500,8 +517,8 @@
                         mobilePageTitle.textContent = button.textContent;
                     });
                 });
-                 const initialTabButton = document.querySelector('nav.sm\\:block .tab-button[data-tab="products"]');
-                 if(initialTabButton) initialTabButton.click();
+                const initialTabButton = document.querySelector('nav.sm\\:block .tab-button[data-tab="products"]');
+                if(initialTabButton) initialTabButton.click();
                 
                 sidebarTabButtons.forEach(button => {
                     button.addEventListener('click', () => {
@@ -513,8 +530,8 @@
                         });
                     });
                 });
-                 const initialSidebarButton = document.querySelector('.sidebar-tab-button');
-                 if(initialSidebarButton) initialSidebarButton.click();
+                const initialSidebarButton = document.querySelector('.sidebar-tab-button');
+                if(initialSidebarButton) initialSidebarButton.click();
 
                 copyButton.addEventListener('click', () => {
                     referralLinkInput.select();
@@ -633,8 +650,8 @@
                             });
 
                             showNotification(`Afiliação com ${productData.name} bem-sucedida!`);
-                             const myProductsTab = document.querySelector('.tab-button[data-tab="my-products"]');
-                             if(myProductsTab) myProductsTab.click(); // Clica apenas se o botão existir
+                                const myProductsTab = document.querySelector('.tab-button[data-tab="my-products"]');
+                                if(myProductsTab) myProductsTab.click(); // Clica apenas se o botão existir
 
                         } catch (error) {
                             console.error("Erro ao afiliar-se: ", error);
@@ -652,4 +669,3 @@
     </script>
 </body>
 </html>
-

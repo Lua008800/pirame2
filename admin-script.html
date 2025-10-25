@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Script de Adicionar Produtos</title>
+    <style>
+        body { font-family: sans-serif; display: grid; place-items: center; min-height: 100vh; background: #222; color: white; }
+        button { font-size: 20px; padding: 20px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        button:disabled { background: #555; }
+        #log { margin-top: 20px; background: #333; padding: 10px; border-radius: 5px; width: 80%; max-width: 600px; height: 300px; overflow-y: scroll; }
+        #log p { margin: 5px; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+    </style>
+</head>
+<body>
+
+    <button id="run-script">Adicionar Produtos de Laticínios (350% Retorno)</button>
+    <div id="log">
+        <p>Aguardando para executar o script...</p>
+        <p style="color: yellow;">LEMBRETE: Apague a coleção 'products' antiga no Firebase antes de executar!</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getFirestore, collection, serverTimestamp, writeBatch, getDocs, query, doc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+        // A SUA CONFIGURAÇÃO DO FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAcSljFY_EZnNZyeDlRD_A5Ac6xMdlfYI",
+            authDomain: "itambe1.firebaseapp.com",
+            projectId: "itambe1",
+            storageBucket: "itambe1.appspot.com",
+            messagingSenderId: "994625835321",
+            appId: "1:994625835321:web:a778e249b04671e83c98e8",
+            measurementId: "G-JP3BRJYES3"
+        };
+
+        // --- LÓGICA DO PRODUTO COM IMAGENS ---
+        const productDefinitions = [
+            { name: "Kit Iogurte Semanal", price: 40, imageUrl: "https://images.pexels.com/photos/236915/pexels-photo-236915.jpeg?auto=compress&cs=tinysrgb&w=400" },
+            { name: "Cesta de Queijos Frescos", price: 60, imageUrl: "https://images.pexels.com/photos/1435255/pexels-photo-1435255.jpeg?auto=compress&cs=tinysrgb&w=400" },
+            { name: "Pacote Laticínios Básico", price: 80, imageUrl: "https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg?auto=compress&cs=tinysrgb&w=400" },
+            { name: "Kit Manteiga & Requeijão", price: 120, imageUrl: "https://images.pexels.com/photos/566541/pexels-photo-566541.jpeg?auto=compress&cs=tinysrgb&w=400" },
+            { name: "Cesta de Queijos Especiais", price: 150, imageUrl: "https://images.pexels.com/photos/821365/pexels-photo-821365.jpeg?auto=compress&cs=tinysrgb&w=400" },
+            { name: "Pacote Família Laticínios", price: 200, imageUrl: "https://images.pexels.com/photos/799279/pexels-photo-799279.jpeg?auto=compress&cs=tinysrgb&w=400" },
+            { name: "Kit Queijos Finos e Doces", price: 300, imageUrl: "https://images.pexels.com/photos/4198816/pexels-photo-4198816.jpeg?auto=compress&cs=tinysrgb&w=400" },
+            { name: "Lote de Produção - Iogurte", price: 500, imageUrl: "https://images.pexels.com/photos/404378/pexels-photo-404378.jpeg?auto=compress&cs=tinysrgb&w=400" },
+            { name: "Lote de Produção - Queijo Curado", price: 800, imageUrl: "https://images.pexels.com/photos/6633237/pexels-photo-6633237.jpeg?auto=compress&cs=tinysrgb&w=400" },
+            { name: "Investimento Mestre Queijeiro", price: 1000, imageUrl: "https://images.pexels.com/photos/128401/pexels-photo-128401.jpeg?auto=compress&cs=tinysrgb&w=400" }
+        ];
+
+        // --- LÓGICA DE GANHOS ---
+        const CICLO_EM_DIAS = 45; 
+        
+        // ----- LINHA MODIFICADA AQUI -----
+        // 3.50 significa 350% de retorno total
+        const MARGEM_LUCRO = 3.50; 
+
+        const productsToCreate = productDefinitions.map(prod => {
+            const preco = prod.price;
+            const retornoTotal = parseFloat((preco * MARGEM_LUCRO).toFixed(2));
+            const retornoDiario = parseFloat((retornoTotal / CICLO_EM_DIAS).toFixed(2));
+
+            return {
+                name: prod.name,
+                price: preco,
+                imageUrl: prod.imageUrl,
+                cycleDays: CICLO_EM_DIAS,
+                totalReturn: retornoTotal, 
+                dailyReturn: retornoDiario, 
+                createdAt: serverTimestamp()
+            };
+        });
+        
+        // --- LÓGICA DO SCRIPT ---
+        
+        const runButton = document.getElementById('run-script');
+        const logEl = document.getElementById('log');
+
+        let db;
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            logEl.innerHTML += '<p>Firebase inicializado. Pronto para adicionar produtos.</p>';
+        } catch (e) {
+            logEl.innerHTML = `<p class="error">Erro ao inicializar Firebase: ${e.message}</p>`;
+            runButton.disabled = true;
+        }
+
+        runButton.addEventListener('click', async () => {
+            if (!db) return;
+
+            runButton.disabled = true;
+            runButton.textContent = 'A processar...';
+            logEl.innerHTML = '<p>A iniciar a adição de produtos...</p>';
+
+            // Verifica se produtos já existem
+            const productsRef = collection(db, "products");
+            const q = query(productsRef);
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+                 logEl.innerHTML = `<p class="error">ERRO: A coleção 'products' já contém ${querySnapshot.size} produtos. Por favor, apague-os primeiro se quiser adicionar esta lista.</p>`;
+                 runButton.textContent = 'Falha - Produtos já existem';
+                 return;
+            }
+
+            // Usa um "batch" para adicionar todos de uma vez
+            const batch = writeBatch(db);
+            
+            productsToCreate.forEach(product => {
+                const newProductRef = doc(collection(db, "products"));
+                batch.set(newProductRef, product);
+            });
+
+            try {
+                await batch.commit();
+                logEl.innerHTML += `<p class="success">SUCESSO! ${productsToCreate.length} produtos de laticínios (com 350% de retorno) foram adicionados ao banco de dados.</p>`;
+                runButton.textContent = 'Completo!';
+            } catch (e) {
+                logEl.innerHTML += `<p class="error">Erro ao adicionar produtos: ${e.message}</p>`;
+                if (e.message.includes("permissions")) {
+                    logEl.innerHTML += `<p class="error"><b>AÇÃO:</b> Verifique as suas 'Regras' (Rules) no Firestore.</p>`;
+                }
+                runButton.disabled = false;
+                runButton.textContent = 'Tentar Novamente';
+            }
+        });
+
+    </script>
+</body>
+</html>
